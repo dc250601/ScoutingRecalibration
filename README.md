@@ -48,7 +48,7 @@ To measure the computational cost of our model on the FPGAs, we will use the fol
 The number of these resources available is minimal. Hence, models with the least amount of resource consumption are given a higher priority.
 
 ---
-# $\mu$GMT muons recalibration
+# $\mu\text{GMT}$ muons recalibration
 Recalibrating of $\mu$, $\phi$, and $p_\mathrm{T}$ using the L1 parameters $\mu$, $\phi$, $p_\mathrm{T}$, muon charge, and reconstruction quality is one of the primary focuses of this study. Offline reconstruction data is used as ground truth for training the networks. Knowledge distillation, along with Quantisation-Aware-Training (QAT), is used to achieve a high level of reconstruction resolution by utilizing only a fraction of the resources on the FPGA boards.
 
 ## Teacher Model
@@ -78,6 +78,7 @@ Although the student model is approximately 1024 times smaller than the teacher,
 | **Available**  | 9024            | 2.6 M              | 1.3 M             | 2160      |
 | **Student**    | 72 (0.79%)      | 5677 (0.21%)       | 11.3 K (0.87%)    | 0         |
 | **Baseline**   | 238 (2.61%)     | 11.6 K (0.43%)     | 33.2 K (3.38%)    | 0         |
+
 The table above shows the usage of various units of a VU9P FPGA when each model is run on it. The DSP reuse factor is set to 4 for all the experiments. Clearly, the student is much lighter compared to the pre-existing baseline.
 
 ## Analysing the performance of the student model
