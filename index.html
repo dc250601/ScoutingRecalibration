@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra-Low-Latency FPGA-Accelerated Neural Network Inference</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- MathJax -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* 2. CSS Variables (The Palette) */
+        :root {
+            --global-bg-color: #ffffff;
+            --global-text-color: #424242;
+            --global-theme-color: #007bff;
+            --global-hover-color: #0056b3;
+            --font-sans: 'Roboto', sans-serif;
+            --font-serif: 'Merriweather', serif;
+        }
+
+        body {
+            background-color: var(--global-bg-color);
+            color: var(--global-text-color);
+            font-family: var(--font-serif);
+            font-weight: 300;
+            line-height: 1.6;
+            font-size: 16px;
+            margin: 0;
+            padding-bottom: 50px;
+        }
+
+        /* 3. Typography Rules */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-sans);
+            color: #000000;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-weight: 500;
+            font-size: 1.75rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+            margin-top: 3rem;
+        }
+
+        h3 {
+            font-weight: 500;
+            font-size: 1.4rem;
+            color: #333;
+            margin-top: 2rem;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        strong {
+            font-weight: 700;
+            color: #222;
+        }
+
+        a {
+            color: var(--global-theme-color);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--global-hover-color);
+            text-decoration: underline;
+        }
+
+        /* 4. Layout & Navigation */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        nav {
+            font-family: var(--font-sans);
+            border-bottom: 1px solid #e0e0e0;
+            padding: 1.5rem 0;
+            margin-bottom: 3rem;
+        }
+
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .nav-links a {
+            color: #555;
+            margin-left: 20px;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .nav-links a:hover {
+            color: var(--global-theme-color);
+            text-decoration: none;
+        }
+
+        /* 5. Component Specifics */
+
+        /* Algorithms / Code Blocks */
+        .algo-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            font-family: var(--font-sans);
+        }
+
+        .algo-title {
+            text-transform: uppercase;
+            font-weight: 700;
+            font-size: 0.9em;
+            letter-spacing: 0.05em;
+            color: #555;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .algo-content {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+            color: #333;
+            white-space: pre-wrap;
+        }
+
+        /* Academic Tables (Booktabs style) */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        th {
+            border-top: 2px solid #dee2e6;
+            border-bottom: 2px solid #dee2e6;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        td {
+            border-top: 1px solid #dee2e6;
+            padding: 10px 8px;
+            text-align: center;
+        }
+
+        td:first-child, th:first-child {
+            text-align: left;
+        }
+
+        td:last-child, th:last-child {
+            text-align: right;
+        }
+
+        tr:last-child td {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        /* Figures & Images */
+        figure {
+            margin: 2.5rem 0;
+            text-align: center;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        figcaption {
+            margin-top: 0.8rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        /* Math */
+        .math-block {
+            overflow-x: auto;
+            text-align: center;
+            margin: 1.5rem 0;
+            padding: 0.5rem 0;
+        }
+        
+        /* Lists */
+        ul, ol {
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .roc-pr-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+
+    .roc-pr-col {
+        flex: 1 1 0;
+        max-width: 50%;
+    }
+
+    .roc-pr-col img {
+        width: 100%;
+        height: auto;
+    }
+
+    /* Optional: stack on very small screens */
+    @media (max-width: 640px) {
+        .roc-pr-col {
+            max-width: 100%;
+        }}
+
+    </style>
+</head>
+<body>
+
+    <!-- Main Content -->
+    <div class="container">
+        
+        <h1>Ultra-Low-Latency FPGA-Accelerated Neural Network Inference at 40 MHz at CMS</h1>
+
+        <h2>Introduction</h2>
+        <p>The Large Hadron Collider (LHC) is one of the most sophisticated experiments ever designed. Its primary purpose is to probe the internal structures of matter and study the underlying physics and interactions of the particles that make up our universe. Particles collide at LHC at a rate of 40 MHz, generating vast amounts of data every second. The collisions are recorded at 4 four interaction points where a sophisticated detector is located. The Compact Muon Solenoid (CMS) Experiment is one such detector. CMS generates data at a theoretical throughput of $\mathcal{O}(40)$ TB/s. It is not possible to store or read out the full event record at such a rate; therefore, a triggering system is required to select interesting events from these vast amounts of data. At CMS, we have a two-level triggering system:</p>
+
+        <p><strong>Level-1 Trigger</strong> The first triggering stage reduced the event rate from 40 MHz to a maximum of 110 kHz, considering the data rate and timing constraints, as well as the hardware constraints of FPGAs. The L1 Trigger can only run a course reconstruction of the incoming physics events, given that it receives only a fraction of the total event-level information from the detector and heavily depends on cut-based algorithms that can introduce significant physics biases within the trigger system.</p>
+
+        <p><strong>High-Level-Trigger</strong> The second stage of the triggering system (HLT) further reduces the event rate from 100 kHz to around 1 kHz, at which point the data can be permanently stored. The HLT receives complete information from the entire detector, enabling a comprehensive physics reconstruction.</p>
+
+        <p>Traditionally, physics-based algorithms were used in the triggering system. However, given the massive success of machine learning (ML) and deep learning, it is essential to investigate whether an ML-based algorithm can enhance the triggering system. Since most of the triggering system is based on FPGA-based computational hardware, computational footprint and timing constraints should also be taken into account. This work demonstrates how ML-based triggering algorithms can be designed that are both computationally lighter and have superior performance compared to traditional physics-based algorithms on tasks such as online recalibration of physics objects and classification of dimuon pairs.</p>
+
+        <h2>Metrics and Definitions</h2>
+        <p>Various metrics are used to compare the performance (in terms of computational cost) and resolution (in terms of prediction accuracy) of different models. The following metrics are defined that will be used extensively later on.</p>
+
+        <ul>
+            <li><strong>Hardware Values:</strong> Hardware values are the data received from the detector and used by the L1-Trigger to make decisions.</li>
+            <li><strong>Reconstructed Values:</strong> Reconstructed values are the corrected values that are calculated after a full physics reconstruction. Reconstructed values are not available on the L1-Trigger.</li>
+        </ul>
+
+        <h3>Regression</h3>
+        <p>For regression tasks, the metric employed is the Full-Width-Half-Maximum (FWHM), which reads:</p>
+        <div class="math-block">
+            $$\text{FWHM}_Y = \text{FWHM}(\hat{y_i}-y_i)$$
+        </div>
+        <p>where $\hat{y_i}$ is the predicted value while $y_i$ being the groud truth.</p>
+
+        <h3>Classification</h3>
+        <p>For classification tasks, the Area Under the Receiver Operating Characteristic curve (AUC-ROC) score is chosen as a metric.</p>
+        <div class="math-block">
+            $$ \mathrm{AUC} = \int_{0}^{1} \mathrm{TPR}(\mathrm{FPR}) \, d(\mathrm{FPR}) $$
+        </div>
+        <p>Where:</p>
+        <ul>
+            <li>$\mathrm{TPR} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}$ is the True Positive Rate</li>
+            <li>$\mathrm{FPR} = \frac{\mathrm{FP}}{\mathrm{FP} + \mathrm{TN}}$ is the False Positive Rate</li>
+        </ul>
+
+        <h3>Computational and Hardware Cost</h3>
+        <p>To measure the computational cost of our model on the FPGAs, we will use the following metrics:</p>
+        <ul>
+            <li><strong>Digital Signal Processors (DSP):</strong> DSP chips are used for processing the relevant signals coming to the FPGA board, particularly additions and multiplications.</li>
+            <li><strong>Flip-Flops (FF):</strong> These units help synchronize logic and save logical states between clock cycles within an FPGA circuit.</li>
+            <li><strong>Look-up-Tables (LUT):</strong> These units help in implementing arbitrary Boolean logics inside the FPGA.</li>
+            <li><strong>Block RAM (BRAM):</strong> a type of random access memory implemented inside the FPGA for data storage.</li>
+        </ul>
+        <p>The number of these resources available is minimal. Hence, models with the least amount of resource consumption are given a higher priority.</p>
+
+        <h2>$\mu\text{GMT}$ muons recalibration</h2>
+        <p>Recalibrating of $\mu$, $\phi$, and $p_\mathrm{T}$ using the L1 parameters $\mu$, $\phi$, $p_\mathrm{T}$, muon charge, and reconstruction quality is one of the primary focuses of this study. Offline reconstruction data is used as ground truth for training the networks. Knowledge distillation, along with Quantisation-Aware-Training (QAT), is used to achieve a high level of reconstruction resolution by utilizing only a fraction of the resources on the FPGA boards.</p>
+
+        <h3>Teacher Model</h3>
+        <p>A four-layer neural network with 256 neurons in each layer is chosen as the teacher model. ReLU non-linearity is used in conjunction with batch normalization after every subsequent layer. The output layer consists of three parameters that predict the recalibrated $\mu$, $\phi$, and $p_\mathrm{T}$. QKeras is used to train the models with QAT precision fixed at [18,6]. Fixed precision notation is used throughout the work, where the leftmost digit signifies the total number of bits used to store the number, while the rightmost digit represents the number of bits used to store the fractional part. The model is trained for 100 epochs using LogCosh loss, and the learning rate is reduced after the model performance plateaus. The Adam optimiser is used with an initial learning rate of $10^{-4}$.</p>
+
+        <h3>Student Model</h3>
+        <p>A four-layer neural network with eight neurons in each layer is chosen as the student model. ReLU non-linearity is used in conjunction with batch normalization after every subsequent layer. The output layer consists of three parameters that predict the recalibrated $\mu$, $\phi$ and $p_\mathrm{T}$. QKeras is used to train the model with QAT precision fixed at [18,6]. The model is trained for 500 epochs with LogCosh as the task-agnostic loss and mean square error (MSE) as the distillation loss. The distillation parameter $\alpha$ is set to 0.1, and the learning rate is reduced once the model's performance plateaus. Adam optimiser is used with an initial learning rate of $10^{-2}$.</p>
+
+        <h3>Baseline Model</h3>
+        <p>To compare the effectiveness of the proposed method, the above models are evaluated against existing baselines in terms of both reconstruction resolution and computational requirements. The reported model from <a href="https://cds.cern.ch/record/2834199">1</a> is used as the baseline for this study. The model is a four-hidden-layer neural network with 16 neurons in each layer trained with a similar loss and schedule as the teacher model.</p>
+
+        <h3>Table: Comparison of FWHM Across Models</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>FWHM</th>
+                        <th>Teacher</th>
+                        <th>Student</th>
+                        <th>Baseline</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>$\phi$</strong></td>
+                        <td>0.120</td>
+                        <td>0.1240</td>
+                        <td>0.140</td>
+                    </tr>
+                    <tr>
+                        <td><strong>$\eta$</strong></td>
+                        <td>0.061</td>
+                        <td>0.063</td>
+                        <td>0.0662</td>
+                    </tr>
+                    <tr>
+                        <td><strong>$p_\mathrm{T}$</strong></td>
+                        <td>0.413</td>
+                        <td>0.417</td>
+                        <td>0.433</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>The table above shows the performance of the three models across the three parameters $\phi$, $\eta$, and $p_\mathrm{T}$. Although the student model is approximately 1024 times smaller than the teacher, it performs almost as well, outperforming the baseline by a large margin despite being four times lighter.</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>VU9P FPGA</th>
+                        <th>DSP</th>
+                        <th>Flip Flops</th>
+                        <th>Look Up Table</th>
+                        <th>BRAMs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Available</strong></td>
+                        <td>9024</td>
+                        <td>2.6 M</td>
+                        <td>1.3 M</td>
+                        <td>2160</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Student</strong></td>
+                        <td>72 (0.79%)</td>
+                        <td>5677 (0.21%)</td>
+                        <td>11.3 K (0.87%)</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Baseline</strong></td>
+                        <td>238 (2.61%)</td>
+                        <td>11.6 K (0.43%)</td>
+                        <td>33.2 K (3.38%)</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>The table above shows the usage of various units of a VU9P FPGA when each model is run on it. The DSP reuse factor is set to 4 for all the experiments. Clearly, the student is much lighter compared to the pre-existing baseline.</p>
+
+        <h2>Analysing the performance of the student model</h2>
+        <p>Although the student model outperforms the baseline across all metrics, a deeper understanding of its performance is still required before moving forward. This section examines the recalibration model (student) in detail. The resolution peaks for each kinematic quantity are plotted in the figure below. From the plot, it can be inferred that the model performs well against $\mu\text{GMT}$ across all metrics.</p>
+
+        <div class="flex flex-col md:flex-row justify-center gap-4 my-8">
+            <img src="https://codimd.web.cern.ch/uploads/upload_5421e71cf9fb89d8ae1d81b23dfa7730.png" class="w-full md:w-[32%]" alt="Resolution Peak 1"/>
+            <img src="https://codimd.web.cern.ch/uploads/upload_c73404ff8748798fa8f03355f0ada84d.png" class="w-full md:w-[32%]" alt="Resolution Peak 2"/>
+            <img src="https://codimd.web.cern.ch/uploads/upload_408c54468773fd6a81552fb8781b9ab0.png" class="w-full md:w-[32%]" alt="Resolution Peak 3"/>
+        </div>
+
+        <p>In the above plot, $\mu\text{GMT}$ represents the default parameter values before recalibration.</p>
+
+        <p>Next, the resolution of recalibrated $p_\mathrm{T}$ vs the reconstructed $p_\mathrm{T}$ is plotted in a figure, which shows that the model performs well for low $p_\mathrm{T}$ ranges, but the resolution worsens towards higher $p_\mathrm{T}$ zones.</p>
+        
+        <figure>
+            <img src="https://codimd.web.cern.ch/uploads/upload_13d80612803706b9b40b2eaadc207f80.png" alt="Resolution of recalibrated pT vs reconstructed pT">
+        </figure>
+
+        <p>Plotting the resolution of recalibrated $\eta$ vs. the reconstructed $\eta$, we do not see a similar trend.</p>
+        
+        <figure>
+            <img src="https://codimd.web.cern.ch/uploads/upload_f93f1dcebdc10729e5ea188fbe1be363.png" alt="Resolution of recalibrated eta vs reconstructed eta">
+        </figure>
+
+        <p>The reason behind the poor recalibration performance of the ML model at the high $p_T$ region is linked to the following reasons:</p>
+        <ol>
+            <li>Presence of exponentially fewer samples in the high $p_T$ region, given that it corresponds to high-energy collisions that occur less frequently.</li>
+            <li>High $p_T$ samples bend significantly less in the magnetic field present within the CMS detector, making their momentum harder to estimate within the muon chamber, making them more error-prone.</li>
+        </ol>
+
+        <h3>Fixing low resolution at high $p_{\text{T}}$</h3>
+        <p>Although the model performs very well for low to moderate $p_\mathrm{T}$ values, it fails to outperform the $\mu$GMT in the high $p_\mathrm{T}$ range. There are several reasons for the model's failure, which have been discussed in the previous section. In this section, attempts are made to fix this problem. Two primary techniques are proposed and experimented with as described in order to solve the discrepancy:-</p>
+        <ul>
+            <li><strong>Loss Scaling:</strong> The loss is scaled to incentivise the model to work better for the high $p_\mathrm{T}$ region. The loss is scaled to the inverse of the number of samples in the dataset, in bins of size 1, with similar $p_\mathrm{T}$ values during the distillation step.</li>
+            <li><strong>Two Models:</strong> Since the model starts to perform worse for high reco $p_\mathrm{T}$, intuitively, one might think that using two models, one for the low reconstructed $p_\mathrm{T}$ region and the other for the reconstructed high $p_\mathrm{T}$ region, should be sufficient to solve the problem. Hence, a two-model approach is also chosen and experimented with.</li>
+        </ul>
+
+        <h3>Loss Scaling</h3>
+        <p>Plotting the resolution vs. the reco $p_\mathrm{T}$ for $\mu$GMT, the model with custom loss scaling and the model (Teacher) with no loss scaling yields the figure below.</p>
+        <figure>
+            <img src="https://codimd.web.cern.ch/uploads/upload_ef059695d1f3d936474d9c2cda89e7e9.png" alt="Resolution vs reco pT">
+        </figure>
+        <p>The scaling does not significantly affect the performance of muons in the low $p_\mathrm{T}$ zone. Although the scaling is orders of magnitude smaller, the performance in the high $p_\mathrm{T}$ zone further worsens when compared to the non-scaled model. The nature of the scaling factor is given below:</p>
+        <figure>
+            <img src="https://codimd.web.cern.ch/uploads/upload_e4b0bbb3d3063fd066a6394519dd4ed8.png" alt="Scaling factor nature">
+        </figure>
+
+        <h3>Two-Model Approach</h3>
+        <p>Next, the two models approach is explored. The figure below shows the resolution vs reco $p_\mathrm{T}$ where a two-model setup is used during the inference. Although this setup solves the problem of low resolution in the high $p_\mathrm{T}$ region, it comes at a cost of degraded performance in the low $p_\mathrm{T}$ region.</p>
+        <figure>
+            <img src="https://codimd.web.cern.ch/uploads/upload_69bbac397b719e205972df4bcb484624.png" alt="Two-model approach resolution">
+        </figure>
+
+        <p>This is not because the model lacks learning capabilities. The low resolution in the high $p_\mathrm{T}$ region is only seen in the reco $p_\mathrm{T}$ and not in the hardware $p_\mathrm{T}$ plot below; since only the hardware $p_\mathrm{T}$ is visible to the model during evaluation and training, this method fails miserably.</p>
+        <figure>
+            <img src="https://codimd.web.cern.ch/uploads/upload_fb80921c071ba38319be924802d12c83.png" alt="Hardware pT plot">
+        </figure>
+
+        <h2>$\mu$GMT di-muon classification</h2>
+        <p>Next, the interest lies in predicting whether a di-muon pair can be identified from a chosen pair of muons using the L1 parameters $\mu$, $\phi$, $p_\mathrm{T}$, muon charge, and reconstruction quality for both the muons. Offline reconstruction data is used as ground truth for training the networks. Knowledge distillation, combined with QAT, is used to achieve a high level of classification performance by utilizing only a fraction of the resources on the FPGA boards.</p>
+
+        <h3>Teacher Model</h3>
+        <p>A four-layer neural network with 256 neurons in each layer is chosen as the teacher model. ReLU non-linearity is used in conjunction with batch normalization after every subsequent layer. The output layer consists of a single neuron with linear/no activation. QKeras is used to train the model with QAT precision fixed at [18,6]. The model is trained for 100 epochs using BinaryCrossEntropy (with logits) loss, and the learning rate is reduced after the model performance plateaus. Adam optimiser is used with an initial learning rate of $10^{-3}$.</p>
+
+        <h3>Student Model</h3>
+        <p>A four-layer neural network with eight neurons in each layer is used as a student model. ReLU non-linearity is used in conjunction with batch normalization after every subsequent layer. The output layer consists of a single neuron with linear/no activation. QKeras is used to train our model with QAT precision fixed at [18,6]. The model is trained for 500 epochs using BinaryCrossEntropy (with logits) as the task-agnostic loss and KLDivergence as the distillation loss. The distillation parameter $\alpha$ is fixed at 0.1, the temperature is set to 0.1, and the learning rate is reduced once the model's performance plateaus. Adam optimiser is used with an initial learning rate of $10^{-2}$.</p>
+
+        <h3>Baseline Model</h3>
+        <p>A model identical to the student model is trained just using BCE Loss (without distillation) as a control. All other parameters are kept identical to those of the student model trained in the previous step.</p>
+
+        <h3>Model Performance Comparison</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Teacher</th>
+                        <th>Student</th>
+                        <th>Student (Non‑Distilled)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>AUC‑ROC</strong></td>
+                        <td>0.970</td>
+                        <td>0.964</td>
+                        <td>0.946</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AUC‑PR</strong></td>
+                        <td>0.887</td>
+                        <td>0.868</td>
+                        <td>0.850</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>The table above shows the performance of the three models. Although the student model is much smaller than the teacher, it performs almost as well while being 1024 times lighter. It also outperforms the non‑distilled version, demonstrating the advantage of knowledge distillation.</p>
+
+        <h3>FPGA Resource Utilization (VU9P)</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>VU9P FPGA</th>
+                        <th>DSP</th>
+                        <th>Flip Flops</th>
+                        <th>Look Up Tables</th>
+                        <th>BRAMs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Available</strong></td>
+                        <td>9024</td>
+                        <td>2.6 M</td>
+                        <td>1.3 M</td>
+                        <td>2160</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Student</strong></td>
+                        <td>78 (0.86 %)</td>
+                        <td>6110 (0.23 %)</td>
+                        <td>12.2 K (0.94 %)</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>The table above shows the usage of various units of a VU9P FPGA when each model is deployed. The DSP reuse factor is set to 4 for all experiments. The student model is clearly far lighter while maintaining competitive performance.</p>
+        
+        <p>The PR and ROC curves are plotted in the figure below, where it can be seen that, for both metrics, the distilled model outperforms the non-distilled one by a considerable margin. Moreover, the information loss during the transfer of knowledge from the teacher to the student appears minimal, as the performance difference between the teacher and the distilled student is small.</p>
+
+        <div class="roc-pr-row">
+            <div class="roc-pr-col">
+                <img
+                    src="https://codimd.web.cern.ch/uploads/upload_3c5208f8e7eddb65773923b93896fd90.png"
+                    alt="ROC Curve"
+                />
+            </div>
+            <div class="roc-pr-col">
+                <img
+                    src="https://codimd.web.cern.ch/uploads/upload_dadfb739fbe91b436ca61faeab230d0f.png"
+                    alt="PR Curve"
+                />
+            </div>
+        </div>
+
+        <h2>Conclusion</h2>
+        <p>In this work, various compression strategies have been explored to implement a lightweight neural network capable of delivering state-of-the-art performance, deployable on FPGA hardware systems in the CMS Level-1 trigger. A technique has been developed employing strategic combinations of quantization-aware training, knowledge distillation, and transfer learning to create a computationally efficient model with negligible loss in performance. The technique is tested on both classification and regression tasks, including $\mu$GMT muon recalibration and $\mu$GMT di-muon classification. The model outperformed the baseline significantly in the muon recalibration task, even after reducing the computational footprint fourfold. However, the model encountered challenges in the high reconstructed $p_\mathrm{T}$ region. Although an increase in the number of samples in the high reconstructed $p_\mathrm{T}$ might help to balance the dataset, it does not mitigate the exponential increase in error in the data itself. This study did not identify a concrete solution to address this issue; however, the analysis suggests that the primary reason behind this phenomenon is the exponentially increasing error in the hardware $p_\mathrm{T}$ compared to the reconstructed $p_\mathrm{T}$. The proposed technique worked well for the di-muon pair classification task. This study demonstrates that neural networks offer competitive performance as triggers; these networks can be made extremely lightweight and completely unbiased from physical assumptions, making them suitable candidates for detecting new physics.</p>
+
+        <h2>References</h2>
+        <ol>
+            <li><a href="https://cds.cern.ch/record/2834199">https://cds.cern.ch/record/2834199</a></li>
+        </ol>
+
+    </div>
+
+</body>
+</html>
